@@ -1,0 +1,51 @@
+body {
+    background: darkgrey;
+}
+
+h1 {
+    text-align: center;/*Выравнивание текста*/
+    font-family: "Papyrus", fantasy;/*Шрифт*/
+    background: linear-gradient(to bottom, gray 20%, burlywood 100%);
+}
+
+h2 {
+    text-align: center;
+    font-family: "Courier New", cursive;
+}
+
+#mainTable {
+    width: 100%;/*Ширина*/
+    font-family: "Courier New", cursive;
+}
+
+ #mainTable th {
+     border: 2px solid black; /* Черные границы 1px */
+     padding: 8px; /* Отступы внутри ячеек */
+     text-align: left;
+     background: linear-gradient(to bottom, burlywood, grey);
+ }
+
+#mainTable td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+}
+
+#pagination {
+    text-align: center;
+}
+
+button {
+    background: burlywood;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.active{
+    background: gray;
+}
+
+select {
+    background: burlywood;
+    cursor: pointer;
+}

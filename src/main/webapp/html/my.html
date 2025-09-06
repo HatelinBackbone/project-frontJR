@@ -1,11 +1,146 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+
+    <!-- удалить после отладки всё про кеш -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <title>RPG</title>
-    <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
-    <link href="/css/my.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/my.css">
+
 </head>
 <body>
 <h1>RPG admin panel</h1>
 
+<h2>Accounts list:</h2>
+
+<label for="tableRowsCount">Count per page:</label>
+<select id="tableRowsCount">
+    <option value="3" selected>3</option>
+    <option value="10">10</option>
+    <option value="20">20</option>
+</select>
+
+<table id="mainTable">
+    <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Title</th>
+        <th>Race</th>
+        <th>Profession</th>
+        <th>Level</th>
+        <th>Birthday</th>
+        <th>Banned</th>
+    </tr>
+</table>
+
+
+<div id="pagination">
+
+</div>
+
+<script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
+<script>
+    var accCount = 0;
+    var valueTableRowsCounter = $('#tableRowsCount').val();
+    var pagesCount = 0;
+    var currentPage = 1;
+
+    //Getting list of accounts from server and filling table of accounts
+    function getTableRows() {
+        $('#mainTable').empty();
+        $('#mainTable').html('<tr><th>#</th><th>Name</th><th>Title</th><th>Race</th><th>Profession</th><th>Level</th><th>Birthday</th><th>Banned</th></tr>');
+        $.ajax({
+            url: 'rest/players?pageNumber=' + (currentPage - 1) + '&pageSize=' + valueTableRowsCounter,
+            method: 'GET',
+            dataType: 'json',
+            success: function (accounts) {
+                if (accounts && accounts.length > 0) {
+                    accounts.forEach(function (account) {
+                        var date = new Date(account.birthday);
+                        if (!isNaN(date.getTime())) {
+                            var day = date.getDate().toString().padStart(2, '0');
+                            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+                            var year = date.getFullYear();
+                            birthday = day + '/' + month + '/' + year;
+                        } else {
+                            birthday = 'Неверная дата';
+                        }
+                        var row = $('<tr>').html(
+                            '<td>' + account.id + '</td>' + '<td>' + account.name + '</td>' +
+                            '<td>' + account.title + '</td>' + '<td>' + account.race + '</td>' +
+                            '<td>' + account.profession + '</td>' + '<td>' + account.level + '</td>' +
+                            '<td>' + birthday + '</td>' + '<td>' + account.banned + '</td>'
+                        );
+                        $('#mainTable').append(row);
+                    })
+                } else {
+                    console.log("No data to display");
+                }
+            },
+            error: function (accounts, status, error) {
+                console.log(error);
+            }
+        });
+    }
+
+    //Downloading count of all players and initial pagination
+    function getAccountsCount() {
+        $.ajax({
+            url: 'rest/players/count',
+            method: 'GET',
+            success: function (count) {
+                accCount = count;
+                valueTableRowsCounter = $('#tableRowsCount').val();
+                pagesCount = Math.ceil(accCount / valueTableRowsCounter);
+
+                $('#pagination').html('<label for="pagination">Pages:</label>');
+                for (var i = 1; i <= pagesCount; i++) {
+                    if (i == 1) {
+                        $('#pagination').append('<button class="page-num active">' + i + '</button>');
+                    } else {
+                        $('#pagination').append('<button class="page-num">' + i + '</button>');
+                    }
+                }
+            }
+        });
+    }
+
+    getAccountsCount();
+    getTableRows();
+
+    //Pagination generation
+    $('#tableRowsCount').change(function () {
+        valueTableRowsCounter = $(this).val();
+        pagesCount = Math.ceil(accCount / valueTableRowsCounter);
+
+        $('#pagination').empty();
+
+        $('#pagination').html('<label for="pagination">Pages:</label>');
+        for (var i = 1; i <= pagesCount; i++) {
+            if (i == 1) {
+                $('#pagination').append('<button class="page-num active">' + i + '</button>');
+            } else {
+                $('#pagination').append('<button class="page-num">' + i + '</button>');
+            }
+        }
+        currentPage = 1;
+        getTableRows();
+    });
+
+    //Page selection
+    $(document).on('click', '.page-num', function () {
+        document.querySelectorAll('.page-num').forEach(function (el) {
+            el.classList.remove('active');
+        })
+        currentPage = $(this).text();
+        this.classList.add('active');
+        getTableRows();
+    });
+
+</script>
 </body>
 </html>
