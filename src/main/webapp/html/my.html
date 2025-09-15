@@ -34,12 +34,71 @@
         <th>Level</th>
         <th>Birthday</th>
         <th>Banned</th>
+        <th>Edit</th>
+        <th>Delete</th>
     </tr>
 </table>
 
 
 <div id="pagination">
 
+</div>
+
+<hr>
+
+<h2>Create new account:</h2>
+
+<div id="newAccount">
+
+    <label for="new-name-input">Name:</label>
+    <input id="new-name-input" type="text" maxlength="12" minlength="1">
+    <br>
+
+    <label for="new-title-input">Title:</label>
+    <input id="new-title-input" type="text" maxlength="30" minlength="1">
+    <br>
+
+    <label for="new-race-select">Race:</label>
+    <select id="new-race-select">
+        <option value="HUMAN" selected>HUMAN</option>
+        <option value="DWARF">DWARF</option>
+        <option value="ELF">ELF</option>
+        <option value="GIANT">GIANT</option>
+        <option value="ORC">ORC</option>
+        <option value="TROLL">TROLL</option>
+        <option value="HOBBIT">HOBBIT</option>
+    </select>
+    <br>
+
+    <label for="new-profession-select">Profession:</label>
+    <select id="new-profession-select">
+        <option value="WARRIOR" selected>WARRIOR</option>
+        <option value="ROGUE">ROGUE</option>
+        <option value="SORCERER">SORCERER</option>
+        <option value="CLERIC">CLERIC</option>
+        <option value="PALADIN">PALADIN</option>
+        <option value="NAZGUL">NAZGUL</option>
+        <option value="WARLOCK">WARLOCK</option>
+        <option value="DRUID">DRUID</option>
+    </select>
+    <br>
+
+    <label for="new-level-input">Level:</label>
+    <input id="new-level-input" type="number" min="0" max="100" step="1">
+    <br>
+
+    <label for="new-birth-input">Birthday:</label>
+    <input id="new-birth-input" type="date" max="3000-01-01" min="2000-01-01" step="1">
+    <br>
+
+    <label for="new-banned-select">Banned:</label>
+    <select id="new-banned-select">
+        <option value="false" selected>false</option>
+        <option value="true">true</option>
+    </select>
+    <br>
+
+    <button id="saveNewAccount">--Save--</button>
 </div>
 
 <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
@@ -52,7 +111,7 @@
     //Getting list of accounts from server and filling table of accounts
     function getTableRows() {
         $('#mainTable').empty();
-        $('#mainTable').html('<tr><th>#</th><th>Name</th><th>Title</th><th>Race</th><th>Profession</th><th>Level</th><th>Birthday</th><th>Banned</th></tr>');
+        $('#mainTable').html('<tr><th>#</th><th>Name</th><th>Title</th><th>Race</th><th>Profession</th><th>Level</th><th>Birthday</th><th>Banned</th><th>Edit</th><th>Delete</th></tr>');
         $.ajax({
             url: 'rest/players?pageNumber=' + (currentPage - 1) + '&pageSize=' + valueTableRowsCounter,
             method: 'GET',
@@ -70,10 +129,16 @@
                             birthday = 'Неверная дата';
                         }
                         var row = $('<tr>').html(
-                            '<td>' + account.id + '</td>' + '<td>' + account.name + '</td>' +
-                            '<td>' + account.title + '</td>' + '<td>' + account.race + '</td>' +
-                            '<td>' + account.profession + '</td>' + '<td>' + account.level + '</td>' +
-                            '<td>' + birthday + '</td>' + '<td>' + account.banned + '</td>'
+                            '<td data-field="id">' + account.id + '</td>' +
+                            '<td class="name">' + account.name + '</td>' +
+                            '<td class="title">' + account.title + '</td>' +
+                            '<td class="race">' + account.race + '</td>' +
+                            '<td class="profession">' + account.profession + '</td>' +
+                            '<td>' + account.level + '</td>' +
+                            '<td>' + birthday + '</td>' +
+                            '<td class="banned">' + account.banned + '</td>' +
+                            '<td><button class="edit-save-button edit" data-id="' + account.id + '"><img src="../img/edit.png" alt="edit"></button></td>' +
+                            '<td><button class="delete-button" data-id="' + account.id + '"><img src="../img/delete.png" alt="delete"></button></td>'
                         );
                         $('#mainTable').append(row);
                     })
@@ -131,7 +196,7 @@
         getTableRows();
     });
 
-    //Page selection
+    //Page selection handler
     $(document).on('click', '.page-num', function () {
         document.querySelectorAll('.page-num').forEach(function (el) {
             el.classList.remove('active');
@@ -141,6 +206,162 @@
         getTableRows();
     });
 
+    //Delete button handler
+    $(document).on('click', '.delete-button', function () {
+        var accId = $(this).data('id');
+
+        if (!confirm('Are you sure you want to delete this account?')) {
+            return;
+        }
+
+        $.ajax({
+            url: 'rest/players/' + accId,
+            method: 'DELETE',
+            success: function (response) {
+                console.log('successfully deleted', response);
+                getTableRows()
+            },
+            error: function (xhr, status, error) {
+                console.log('error while deleting ', error);
+            }
+        })
+    });
+
+    //Edit|save button handler
+    $(document).on('click', '.edit-save-button', function () {
+        if ($('.edit-save-button.save').length && !$(this).hasClass('save')) {
+            alert('You need to save previous account first!');
+            return;
+        }
+
+        var accId = $(this).data('id');
+        var row = $(this).closest('tr');
+
+        if ($(this).hasClass('edit')) {
+            $(this).html('<img src="../img/save.png" alt="save">').removeClass('edit').addClass('save');
+            $('.delete-button[data-id="' + accId + '"]').addClass('disabled').prop('disabled', true);
+
+            var nametxt = row.find('.name').text().trim();
+            row.find('.name').html('<input class="name-input" type="text" value="' + nametxt + '">');
+
+            var titletxt = row.find('.title').text().trim();
+            row.find('.title').html('<input class="title-input" type="text" value="' + titletxt + '">');
+
+            var racetxt = row.find('.race').text().trim();
+            console.log('race- ', racetxt);
+            row.find('.race').html('<select class="race-select">' +
+                '<option value="HUMAN">HUMAN</option>' +
+                '<option value="DWARF">DWARF</option>' +
+                '<option value="ELF">ELF</option>' +
+                '<option value="GIANT">GIANT</option>' +
+                '<option value="ORC">ORC</option>' +
+                '<option value="TROLL">TROLL</option>' +
+                '<option value="HOBBIT">HOBBIT</option>' +
+                '</select>');
+            $('.race-select').find('option').each(function () {
+                if ($(this).val() == racetxt) {
+                    $(this).prop('selected', true);
+                }
+            });
+
+            var professiontxt = row.find('.profession').text().trim();
+            row.find('.profession').html('<select class="profession-select">' +
+                '<option value="WARRIOR">WARRIOR</option>' +
+                '<option value="ROGUE">ROGUE</option>' +
+                '<option value="SORCERER">SORCERER</option>' +
+                '<option value="CLERIC">CLERIC</option>' +
+                '<option value="PALADIN">PALADIN</option>' +
+                '<option value="NAZGUL">NAZGUL</option>' +
+                '<option value="WARLOCK">WARLOCK</option>' +
+                '<option value="DRUID">DRUID</option>' +
+                '</select>');
+            $('.profession-select').find('option').each(function () {
+                if ($(this).val() == professiontxt) {
+                    $(this).prop('selected', true);
+                }
+            })
+
+            var bannedval = row.find('.banned').text().trim();
+            row.find('.banned').html('<select class="banned-select">' +
+                '<option value="true">true</option>' +
+                '<option value="false">false</option>' +
+                '</select>');
+            $('.banned-select').find('option').each(function () {
+                if ($(this).val() == bannedval) {
+                    $(this).prop('selected', true);
+                }
+            })
+
+        } else if ($(this).hasClass('save')) {
+            $(this).html('<img src="../img/edit.png" alt="edit">').removeClass('save').addClass('edit');
+            $('.delete-button[data-id="' + accId + '"]').prop('disabled', false).removeClass('disabled');
+
+            rowData = {
+                name: row.find('.name-input').val(),
+                title: row.find('.title-input').val(),
+                race: row.find('.race-select').val(),
+                profession: row.find('.profession-select').val(),
+                banned: row.find('.banned-select').val()
+            }
+
+            $.ajax({
+                url: 'rest/players/' + accId,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(rowData),
+                success: function (response) {
+                    console.log(response);
+                    getTableRows();
+                },
+                error: function (xhr, status, error) {
+                    console.log(error);
+                }
+            })
+        }
+    });
+
+    //Save new account button handler
+    $(document).on('click', '#saveNewAccount', function(){
+        var dateB = new Date($('#new-birth-input').val()).getTime();
+        var ban = new Boolean(false);
+        if ($('#new-banned-select').val() == 'true') {
+            ban = new Boolean(true);
+        }
+
+        var data = {
+            name: $('#new-name-input').val().trim(),
+            title: $('#new-title-input').val().trim(),
+            race: $('#new-race-select').val(),
+            profession: $('#new-profession-select').val(),
+            birthday: dateB,
+            banned: ban,
+            level: $('#new-level-input').val(),
+        }
+
+        $.ajax({
+            url: 'rest/players/',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                console.log(response);
+                getTableRows();
+                $('#newAccount').find('input, select').each(function() {
+                    if ($(this).is('select')) {
+                        // Для select выбираем первое option
+                        $(this).val($(this).find('option:first').val());
+                    } else {
+                        // Для input очищаем значение
+                        $(this).val('');
+                    }
+                });
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+                alert("Creation error 400");
+            }
+        })
+    });
 </script>
 </body>
 </html>

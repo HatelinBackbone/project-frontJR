@@ -44,15 +44,27 @@ public class PlayerController {
 
     @PostMapping
     public ResponseEntity<PlayerInfo> createPlayer(@RequestBody PlayerInfo info) {
-        if (StringUtils.isEmpty(info.name) || info.name.length() > 12) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        if (info.title.length() > 30) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        if (isNull(info.race)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        if (isNull(info.profession)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        if (isNull(info.birthday) || info.birthday < 0) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        if (StringUtils.isEmpty(info.name) || info.name.length() > 12) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (info.title.length() > 30){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (isNull(info.race)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (isNull(info.profession)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (isNull(info.birthday) || info.birthday < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
         LocalDate localDate = new Date(info.birthday).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         int year = localDate.getYear();
-        if (year < 2000 || year > 3000) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        if (year < 2000 || year > 3000) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
         boolean banned = !isNull(info.banned) && info.banned;
 

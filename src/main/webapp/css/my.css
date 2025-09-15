@@ -45,7 +45,26 @@ button {
     background: gray;
 }
 
+.disabled {
+    background: gray;
+    cursor: not-allowed;
+}
+
 select {
     background: burlywood;
     cursor: pointer;
+}
+
+input {
+    background: burlywood;
+}
+
+hr {
+    background: burlywood;
+    height: 2px;
+}
+
+#newAccount {
+    text-align: center;
+    line-height: 1.5;
 }
